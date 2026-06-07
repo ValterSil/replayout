@@ -1,7 +1,8 @@
 {
     "name": "ReplayOut",
     "short_name": "ReplayOut",
-    "start_url": "./",
+    "start_url": "/replayout/",
+    "scope": "/replayout/",
     "display": "standalone",
     "background_color": "#141414",
     "theme_color": "#141414",
