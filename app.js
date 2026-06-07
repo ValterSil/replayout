@@ -192,6 +192,6 @@ window.onclick = e => {
         modal.style.display = "none";
     }
 if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js");
+    navigator.serviceWorker.register("/replayout/sw.js");
 }
 };
