@@ -1,5 +1,6 @@
 let catalogo = null;
 
+const telaUpload = document.getElementById("telaUpload");
 const app = document.getElementById("app");
 const lista = document.getElementById("listaFilmes");
 const pesquisa = document.getElementById("pesquisa");
@@ -8,6 +9,15 @@ const modal = document.getElementById("modal");
 const modalTitulo = document.getElementById("modalTitulo");
 const modalLinks = document.getElementById("modalLinks");
 const fecharModal = document.getElementById("fecharModal");
+
+function normalizar(texto) {
+    return texto
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+}
 
 window.onload = async () => {
 
@@ -120,14 +130,14 @@ window.onclick=e=>{
 
 };
 
-pesquisa.oninput=()=>{
+pesquisa.oninput = () => {
 
-    const txt=
+    const txt = normalizar(
         pesquisa.value
-        .toLowerCase();
+    );
 
-    const resultado=
-        catalogo.filmes.filter(f=>
+    const resultado =
+        catalogo.filmes.filter(f =>
 
             f.tituloBusca.includes(
                 txt
