@@ -195,5 +195,8 @@ window.onclick = e => {
 };
 
 if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js");
+    // Troque "sw.js" por "service-worker.js"
+    navigator.serviceWorker.register("service-worker.js")
+        .then(() => console.log("Service Worker registrado com sucesso!"))
+        .catch(err => console.error("Erro ao registrar SW:", err));
 }
