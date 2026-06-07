@@ -5,6 +5,14 @@ const app = document.getElementById("app");
 const lista = document.getElementById("listaFilmes");
 const pesquisa = document.getElementById("pesquisa");
 
+const btnFavoritos =
+    document.getElementById("btnFavoritos");
+
+let favoritos =
+    JSON.parse(
+        localStorage.getItem("favoritos")
+    ) || [];
+
 const modal = document.getElementById("modal");
 const modalTitulo = document.getElementById("modalTitulo");
 const modalLinks = document.getElementById("modalLinks");
@@ -53,21 +61,55 @@ function iniciar(){
 
 function renderizar(listaFilmes){
 
-    lista.innerHTML="";
+    lista.innerHTML = "";
 
-    listaFilmes.forEach(f=>{
+    listaFilmes.forEach(f => {
+
+        const ehFavorito =
+            favoritos.includes(f.id);
 
         const div =
             document.createElement("div");
 
-        div.className="filme";
+        div.className = "filme";
 
-        div.innerHTML=`
+        div.innerHTML = `
             <span>${f.titulo}</span>
-            <span>❤</span>
+            <span class="favorito">
+                ${ehFavorito ? "❤️" : "🤍"}
+            </span>
         `;
 
-        div.onclick=()=>abrirFilme(f);
+        div.onclick = () => abrirFilme(f);
+
+        const coracao =
+            div.querySelector(".favorito");
+
+        coracao.onclick = (e) => {
+
+            e.stopPropagation();
+
+            if (favoritos.includes(f.id)) {
+
+                favoritos =
+                    favoritos.filter(
+                        id => id !== f.id
+                    );
+
+            } else {
+
+                favoritos.push(f.id);
+
+            }
+
+            localStorage.setItem(
+                "favoritos",
+                JSON.stringify(favoritos)
+            );
+
+            renderizar(listaFilmes);
+
+        };
 
         lista.appendChild(div);
 
@@ -172,5 +214,38 @@ document
         );
 
     };
+    
+btnFavoritos.onclick = () => {
+
+    if (btnFavoritos.dataset.modo === "favoritos") {
+
+        renderizar(
+            catalogo.filmes
+        );
+
+        btnFavoritos.dataset.modo = "";
+
+        btnFavoritos.innerText =
+            "❤ Favoritos";
+
+        return;
+    }
+
+    const listaFavoritos =
+        catalogo.filmes.filter(f =>
+            favoritos.includes(f.id)
+        );
+
+    renderizar(
+        listaFavoritos
+    );
+
+    btnFavoritos.dataset.modo =
+        "favoritos";
+
+    btnFavoritos.innerText =
+        "🎬 Todos";
+
+};
 
 });
