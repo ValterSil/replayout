@@ -191,4 +191,7 @@ window.onclick = e => {
     if (e.target === modal) {
         modal.style.display = "none";
     }
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js");
+}
 };
