@@ -1,22 +1,20 @@
 let catalogo = null;
 
-const telaUpload = document.getElementById("telaUpload");
-const app = document.getElementById("app");
 const lista = document.getElementById("listaFilmes");
 const pesquisa = document.getElementById("pesquisa");
-
-const btnFavoritos =
-    document.getElementById("btnFavoritos");
-
-let favoritos =
-    JSON.parse(
-        localStorage.getItem("favoritos")
-    ) || [];
+const btnFavoritos = document.getElementById("btnFavoritos");
 
 const modal = document.getElementById("modal");
 const modalTitulo = document.getElementById("modalTitulo");
 const modalLinks = document.getElementById("modalLinks");
 const fecharModal = document.getElementById("fecharModal");
+
+let favoritos =
+    JSON.parse(localStorage.getItem("favoritos")) || [];
+
+let modoFavoritos = false;
+
+/* ---------------- UTIL ---------------- */
 
 function normalizar(texto) {
     return texto
@@ -27,50 +25,30 @@ function normalizar(texto) {
         .trim();
 }
 
+/* ---------------- CARREGAR DADOS ---------------- */
+
 window.onload = async () => {
-
     try {
-
-        const resposta = await fetch(
-            "filmes.json"
-        );
-
-        catalogo =
-            await resposta.json();
-
-        iniciar();
-
+        const resposta = await fetch("filmes.json");
+        catalogo = await resposta.json();
+        renderizar(catalogo.filmes);
     } catch (e) {
-
-        alert(
-            "Erro ao carregar filmes.json"
-        );
-
+        alert("Erro ao carregar filmes.json");
         console.log(e);
-
     }
-
 };
-function iniciar(){
 
-    renderizar(
-        catalogo.filmes
-    );
+/* ---------------- RENDER ---------------- */
 
-}
-
-function renderizar(listaFilmes){
+function renderizar(listaFilmes) {
 
     lista.innerHTML = "";
 
     listaFilmes.forEach(f => {
 
-        const ehFavorito =
-            favoritos.includes(f.id);
+        const ehFavorito = favoritos.includes(f.id);
 
-        const div =
-            document.createElement("div");
-
+        const div = document.createElement("div");
         div.className = "filme";
 
         div.innerHTML = `
@@ -82,170 +60,135 @@ function renderizar(listaFilmes){
 
         div.onclick = () => abrirFilme(f);
 
-        const coracao =
-            div.querySelector(".favorito");
+        const coracao = div.querySelector(".favorito");
 
         coracao.onclick = (e) => {
-
             e.stopPropagation();
 
             if (favoritos.includes(f.id)) {
-
-                favoritos =
-                    favoritos.filter(
-                        id => id !== f.id
-                    );
-
+                favoritos = favoritos.filter(id => id !== f.id);
             } else {
-
                 favoritos.push(f.id);
-
             }
 
-            localStorage.setItem(
-                "favoritos",
-                JSON.stringify(favoritos)
-            );
+            localStorage.setItem("favoritos", JSON.stringify(favoritos));
 
-            renderizar(listaFilmes);
-
+            atualizarTela();
         };
 
         lista.appendChild(div);
-
     });
-
 }
 
-function abrirFilme(filme){
+/* ---------------- FAVORITOS ---------------- */
 
-    if(
-        filme.midias.length===1
-    ){
-        window.open(
-            filme.midias[0].url,
-            "_blank"
+function toggleFavoritos() {
+
+    modoFavoritos = !modoFavoritos;
+
+    btnFavoritos.innerText =
+        modoFavoritos ? "🎬 Todos" : "❤ Favoritos";
+
+    atualizarTela();
+}
+
+function atualizarTela() {
+
+    let listaAtual = catalogo.filmes;
+
+    if (modoFavoritos) {
+        listaAtual = catalogo.filmes.filter(f =>
+            favoritos.includes(f.id)
         );
-        return;
     }
 
-    modalTitulo.innerText=
-        filme.titulo;
-
-    modalLinks.innerHTML="";
-
-    filme.midias.forEach(m=>{
-
-        const a =
-            document.createElement("a");
-
-        a.className=
-            "linkOpcao";
-
-        a.href=m.url;
-
-        a.target="_blank";
-
-        a.innerText=
-            m.titulo || "Abrir";
-
-        modalLinks.appendChild(a);
-
-    });
-
-    modal.style.display="block";
+    renderizar(listaAtual);
 }
 
-fecharModal.onclick=()=>{
-
-    modal.style.display="none";
-
-};
-
-window.onclick=e=>{
-
-    if(
-        e.target===modal
-    ){
-        modal.style.display="none";
-    }
-
-};
+/* ---------------- BUSCA ---------------- */
 
 pesquisa.oninput = () => {
 
-    const txt = normalizar(
-        pesquisa.value
-    );
+    const txt = normalizar(pesquisa.value);
 
-    const resultado =
-        catalogo.filmes.filter(f =>
+    let listaFiltrada = catalogo.filmes;
 
-            f.tituloBusca.includes(
-                txt
-            )
-
+    if (modoFavoritos) {
+        listaFiltrada = listaFiltrada.filter(f =>
+            favoritos.includes(f.id)
         );
+    }
 
-    renderizar(
-        resultado
+    listaFiltrada = listaFiltrada.filter(f =>
+        normalizar(f.tituloBusca).includes(txt)
     );
 
+    renderizar(listaFiltrada);
 };
 
-document
-.querySelectorAll("#letras button")
-.forEach(btn=>{
+/* ---------------- LETRAS ---------------- */
 
-    btn.onclick=()=>{
+document.querySelectorAll("#letras button")
+.forEach(btn => {
 
-        const letra=
-            btn.innerText;
+    btn.onclick = () => {
 
-        const resultado=
-            catalogo.filmes.filter(f=>
+        const letra = btn.innerText;
 
-                f.grupo===letra
+        let listaFiltrada = catalogo.filmes;
 
+        if (modoFavoritos) {
+            listaFiltrada = listaFiltrada.filter(f =>
+                favoritos.includes(f.id)
             );
+        }
 
-        renderizar(
-            resultado
+        listaFiltrada = listaFiltrada.filter(f =>
+            f.grupo === letra
         );
 
+        renderizar(listaFiltrada);
     };
-    
-btnFavoritos.onclick = () => {
 
-    if (btnFavoritos.dataset.modo === "favoritos") {
+});
 
-        renderizar(
-            catalogo.filmes
-        );
+/* ---------------- BOTÃO FAVORITOS ---------------- */
 
-        btnFavoritos.dataset.modo = "";
+btnFavoritos.onclick = toggleFavoritos;
 
-        btnFavoritos.innerText =
-            "❤ Favoritos";
+/* ---------------- MODAL ---------------- */
 
+function abrirFilme(filme) {
+
+    if (filme.midias.length === 1) {
+        window.open(filme.midias[0].url, "_blank");
         return;
     }
 
-    const listaFavoritos =
-        catalogo.filmes.filter(f =>
-            favoritos.includes(f.id)
-        );
+    modalTitulo.innerText = filme.titulo;
 
-    renderizar(
-        listaFavoritos
-    );
+    modalLinks.innerHTML = "";
 
-    btnFavoritos.dataset.modo =
-        "favoritos";
+    filme.midias.forEach(m => {
 
-    btnFavoritos.innerText =
-        "🎬 Todos";
+        const a = document.createElement("a");
+        a.className = "linkOpcao";
+        a.href = m.url;
+        a.target = "_blank";
+        a.innerText = m.titulo || "Abrir";
 
+        modalLinks.appendChild(a);
+    });
+
+    modal.style.display = "block";
+}
+
+fecharModal.onclick = () => {
+    modal.style.display = "none";
 };
 
-});
+window.onclick = e => {
+    if (e.target === modal) {
+        modal.style.display = "none";
+    }
+};
