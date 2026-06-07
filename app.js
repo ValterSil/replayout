@@ -195,5 +195,5 @@ window.onclick = e => {
 };
 
 if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/replayout/sw.js");
+    navigator.serviceWorker.register("sw.js");
 }
