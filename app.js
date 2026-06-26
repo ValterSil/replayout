@@ -24,21 +24,30 @@ function normalizar(texto) {
         .replace(/\s+/g, " ")
         .trim();
 }
-
+/* ---------------- MENSAGEM INICIAL ---------------- */
+function mostrarMensagemInicial() {
+    lista.innerHTML = `
+        <div style="text-align: center; margin-top: 60px; color: #666;">
+            <h2 style="font-size: 50px; margin-bottom: 15px;">🍿</h2>
+            <h3>O que vamos assistir hoje?</h3>
+            <p style="margin-top: 10px; font-size: 16px;">Use a barra de pesquisa ou as letras acima para explorar o catálogo.</p>
+        </div>
+    `;
+}
 /* ---------------- CARREGAR DADOS ---------------- */
-
 window.onload = async () => {
     try {
         const resposta = await fetch("filmes.json");
         catalogo = await resposta.json();
-        renderizar(catalogo.filmes);
+        
+        // Em vez de renderizar tudo, mostra a mensagem inicial
+        mostrarMensagemInicial();
+
     } catch (e) {
-        alert("Erro ao carregar filmes.json");
+        alert("Erro ao carregar filmes.json. Certifique-se de rodar o script Python primeiro!");
         console.log(e);
     }
 };
-
-/* ---------------- RENDER ---------------- */
 
 /* ---------------- RENDER ---------------- */
 
@@ -133,63 +142,62 @@ function toggleFavoritos() {
 }
 
 function atualizarTela() {
-
-    let listaAtual = catalogo.filmes;
-
     if (modoFavoritos) {
-        listaAtual = catalogo.filmes.filter(f =>
-            favoritos.includes(f.id)
-        );
+        let listaAtual = catalogo.filmes.filter(f => favoritos.includes(f.id));
+        renderizar(listaAtual);
+    } else {
+        // Se desativou os favoritos, limpa a busca e volta para a tela inicial
+        pesquisa.value = "";
+        mostrarMensagemInicial();
     }
-
-    renderizar(listaAtual);
 }
 
 /* ---------------- BUSCA ---------------- */
 
+/* ---------------- BUSCA (COM DEBOUNCE) ---------------- */
+let timeoutBusca; 
+
 pesquisa.oninput = () => {
+    clearTimeout(timeoutBusca);
 
-    const txt = normalizar(pesquisa.value);
+    timeoutBusca = setTimeout(() => {
+        const txt = normalizar(pesquisa.value);
 
-    let listaFiltrada = catalogo.filmes;
-
-    if (modoFavoritos) {
-        listaFiltrada = listaFiltrada.filter(f =>
-            favoritos.includes(f.id)
-        );
-    }
-
-    listaFiltrada = listaFiltrada.filter(f =>
-        normalizar(f.tituloBusca).includes(txt)
-    );
-
-    renderizar(listaFiltrada);
-};
-
-/* ---------------- LETRAS ---------------- */
-
-document.querySelectorAll("#letras button")
-.forEach(btn => {
-
-    btn.onclick = () => {
-
-        const letra = btn.innerText;
+        // Se o texto estiver vazio e NÃO estiver nos favoritos, mostra a tela inicial
+        if (txt === "" && !modoFavoritos) {
+            mostrarMensagemInicial();
+            return; // Para a execução da função aqui
+        }
 
         let listaFiltrada = catalogo.filmes;
 
         if (modoFavoritos) {
-            listaFiltrada = listaFiltrada.filter(f =>
-                favoritos.includes(f.id)
-            );
+            listaFiltrada = listaFiltrada.filter(f => favoritos.includes(f.id));
         }
 
-        listaFiltrada = listaFiltrada.filter(f =>
-            f.grupo === letra
-        );
+        if (txt !== "") {
+            listaFiltrada = listaFiltrada.filter(f => f.tituloBusca.includes(txt));
+        }
 
         renderizar(listaFiltrada);
-    };
+    }, 300); 
+};
 
+/* ---------------- FILTRO DE LETRAS ---------------- */
+document.querySelectorAll("#letras button").forEach(btn => {
+    btn.onclick = () => {
+        pesquisa.value = ""; // Limpa a barra de pesquisa visualmente
+        
+        const letra = btn.innerText;
+        let listaFiltrada = catalogo.filmes;
+
+        if (modoFavoritos) {
+            listaFiltrada = listaFiltrada.filter(f => favoritos.includes(f.id));
+        }
+
+        listaFiltrada = listaFiltrada.filter(f => f.grupo === letra);
+        renderizar(listaFiltrada);
+    };
 });
 
 /* ---------------- BOTÃO FAVORITOS ---------------- */
