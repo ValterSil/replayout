@@ -40,9 +40,15 @@ window.onload = async () => {
 
 /* ---------------- RENDER ---------------- */
 
+/* ---------------- RENDER ---------------- */
+
 function renderizar(listaFilmes) {
 
     lista.innerHTML = "";
+
+    // O fragmento cria uma "tela invisível" na memória.
+    // Inserir os filmes aqui é infinitamente mais rápido do que jogar direto na tela do celular.
+    const fragmento = document.createDocumentFragment();
 
     listaFilmes.forEach(f => {
 
@@ -72,13 +78,47 @@ function renderizar(listaFilmes) {
             }
 
             localStorage.setItem("favoritos", JSON.stringify(favoritos));
-
             atualizarTela();
         };
 
-        lista.appendChild(div);
+        // Adiciona o filme no fragmento invisível
+        fragmento.appendChild(div);
     });
+
+    // Joga todos os filmes na tela de uma única vez!
+    lista.appendChild(fragmento);
 }
+
+/* ---------------- BUSCA (COM DEBOUNCE) ---------------- */
+
+let timerBusca; // Variável para controlar o tempo
+
+pesquisa.oninput = () => {
+
+    // Cancela a busca anterior se a pessoa ainda estiver digitando
+    clearTimeout(timerBusca);
+
+    // Aguarda 300 milissegundos após a última letra para iniciar a busca
+    timerBusca = setTimeout(() => {
+        
+        const txt = normalizar(pesquisa.value);
+        let listaFiltrada = catalogo.filmes;
+
+        if (modoFavoritos) {
+            listaFiltrada = listaFiltrada.filter(f =>
+                favoritos.includes(f.id)
+            );
+        }
+
+        listaFiltrada = listaFiltrada.filter(f =>
+            // Removido o normalizar() daqui! O JSON já tem isso pronto.
+            f.tituloBusca.includes(txt)
+        );
+
+        renderizar(listaFiltrada);
+
+    }, 300); 
+};
 
 /* ---------------- FAVORITOS ---------------- */
 
