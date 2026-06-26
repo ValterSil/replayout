@@ -56,10 +56,13 @@ function renderizar(listaFilmes) {
     lista.innerHTML = "";
 
     // O fragmento cria uma "tela invisível" na memória.
-    // Inserir os filmes aqui é infinitamente mais rápido do que jogar direto na tela do celular.
     const fragmento = document.createDocumentFragment();
 
-    listaFilmes.forEach(f => {
+    // TRAVA DE SEGURANÇA: Limita a exibição aos 50 primeiros filmes
+    const limite = 50;
+    const filmesParaMostrar = listaFilmes.slice(0, limite);
+
+    filmesParaMostrar.forEach(f => {
 
         const ehFavorito = favoritos.includes(f.id);
 
@@ -94,8 +97,19 @@ function renderizar(listaFilmes) {
         fragmento.appendChild(div);
     });
 
-    // Joga todos os filmes na tela de uma única vez!
+    // Joga os filmes (no máximo 50) na tela de uma única vez
     lista.appendChild(fragmento);
+
+    // MENSAGEM EXTRA: Se houver mais filmes do que o limite, avisa o usuário
+    if (listaFilmes.length > limite) {
+        const aviso = document.createElement("div");
+        aviso.style.textAlign = "center";
+        aviso.style.padding = "20px";
+        aviso.style.color = "#aaa";
+        aviso.style.fontSize = "14px";
+        aviso.innerText = `Mostrando 50 de ${listaFilmes.length} resultados. Continue digitando para filtrar.`;
+        lista.appendChild(aviso);
+    }
 }
 
 /* ---------------- BUSCA (COM DEBOUNCE) ---------------- */
