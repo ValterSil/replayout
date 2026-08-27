@@ -1,1 +1,2 @@
+filmes.json filter=lfs diff=lfs merge=lfs -text
 filmes.json !text !filter !merge !diff
